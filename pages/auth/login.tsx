@@ -4,25 +4,29 @@ import { useRouter } from 'next/router';
 const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [error, setError] = useState('');
+    const [error, setError] = useState<string | null>(null);
     const router = useRouter();
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        //Faz uma requisição POST para a API de login
-        const res = await fetch('api/login', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ email, password }),
-        });
+        try {
+            const response = await fetch('/api/login', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email, password }),
+            });
 
-        if(res.ok) {
-            router.push('/dashboard');
-        } else {
-            setError('Credenciais inválidas');
+            if (response.ok) {
+                // login bem-sucedido
+                const data = await response.json();
+            } else {
+                // login falhou
+                const errorData = await response.json();
+                setError(errorData.message); // Define o erro a ser exibido
+            }
+        } catch (err) {
+            setError('Ocorreu um erro. Tente novamente.'); 
         }
     };
 

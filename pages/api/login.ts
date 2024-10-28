@@ -1,23 +1,27 @@
 import { NextApiRequest, NextApiResponse } from 'next';
+import { supabase } from '../../lib/supabaseClient';
 
-const users = [
-    { email: 'admin@exemple.com', password: 'admin123' },
-    { email: 'user@exemple.com', password: 'user123'},
-];
-
-export default (req: NextApiRequest, res: NextApiResponse) => {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     if (req.method === 'POST') {
         const { email, password } = req.body;
 
-        const user = users.find((u) => u.email === email && u.password ===password);
+        const { data: user, error } = await supabase
+            .from('users')
+            .select('id, email, password')
+            .eq('email', email)
+            .eq('password', password)
+            .single();
 
-        if (user) {
-            res.status(200).json({ message: 'Login bem-sucedido!' });
-        } else {
-            res.status(401).json({ message: 'Credenciais inválidas' });
+        if (error || !user) {
+            return res.status(401).json({ message: 'Credenciais inválidas' });
         }
-    } else {
-        res.setHeader('Allow', ['POST']);
-        res.status(405).end(`Método ${req.method} não permitido`);
+        if (user.password === password) {
+        return res.status(200).json({ message: 'Login bem-sucedido!', user });
+        } else {
+            return res.status(401).json({ message: 'Credenciais inválidas' })
+        }
     }
-};
+
+    res.setHeader('Allow', ['POST']);
+    res.status(405).end(`Método ${req.method} não permitido`);
+}
