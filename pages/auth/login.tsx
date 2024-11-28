@@ -5,6 +5,7 @@ const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState<string | null>(null);
+    const [user, setUser] = useState<any>(null);
     const router = useRouter();
 
     const handleLogin = async (e: React.FormEvent) => {
@@ -18,8 +19,10 @@ const Login = () => {
             });
 
             if (response.ok) {
-                // login bem-sucedido
                 const data = await response.json();
+                setUser(data.user);
+                setError(null);
+                router.push("/dashboard")
             } else {
                 // login falhou
                 const errorData = await response.json();
@@ -29,6 +32,15 @@ const Login = () => {
             setError('Ocorreu um erro. Tente novamente.'); 
         }
     };
+
+    const handleRegisterRedirect = () => {
+        if (user && user.role === 'tecnico'){
+            router.push('/auth/register')
+        } else {
+            setError('Apenas técnicos podem acessar a página de registro.')
+        }
+
+    }
 
     return (
         <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
@@ -69,6 +81,9 @@ const Login = () => {
                     Entrar
                 </button>
             </form>
+            <button onClick={handleRegisterRedirect} style={{ marginTop: '1rem', padding: '0.5rem 1rem' }}>
+                Registrar
+            </button>
         </div>
     </div>
     );
